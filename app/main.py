@@ -114,7 +114,6 @@ def main():
             file_name = tree_sha1[2:]
             with open(f'.git/objects/{dir_name}/{file_name}', 'rb') as f:
                 data = f.read()
-                print(zlib.decompress(data))
                 for i in range(2, len(zlib.decompress(data).split(b' '))):
                     decomp_data = zlib.decompress(data).split(b' ')[i].split(b'\0')[0].decode()
                     print(decomp_data)
