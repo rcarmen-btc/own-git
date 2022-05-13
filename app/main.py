@@ -30,11 +30,11 @@ class Tree:
 
         data = ""
         for key, val in store['blobs'].items():
-            data += f"100644 {key}\0{val}"
+            data += f"100644 {key}\0{val.encode()}"
         for key, val in store['trees'].items():
-            data += f"040000 {key}\0{val.sha}"
+            data += f"040000 {key}\0{val.sha.encode()}"
         
-        header = f"tree {len(data.encode('utf-8'))}\0"
+        header = f"tree {len(data.encode('utf-8')) + 1000}\0"
 
         store = header + data
 
@@ -114,6 +114,7 @@ def main():
             file_name = tree_sha1[2:]
             with open(f'.git/objects/{dir_name}/{file_name}', 'rb') as f:
                 data = f.read()
+                print(zlib.decompress(data))
                 for i in range(2, len(zlib.decompress(data).split(b' '))):
                     decomp_data = zlib.decompress(data).split(b' ')[i].split(b'\0')[0].decode()
                     print(decomp_data)
