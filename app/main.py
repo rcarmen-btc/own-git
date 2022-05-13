@@ -1,7 +1,6 @@
 from importlib.resources import path
 import sys
 import os
-from tkinter import W
 import zlib
 import hashlib
 
@@ -18,7 +17,7 @@ def main():
         os.mkdir(".git")
         os.mkdir(".git/objects")
         os.mkdir(".git/refs")
-        
+
         with open(".git/HEAD", "w") as f:
             f.write("ref: refs/heads/master\n")
         print("Initialized git directory")
