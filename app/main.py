@@ -1,10 +1,7 @@
-from importlib.resources import path
 import sys
 import os
 import zlib
 import hashlib
-
-from numpy import size
 
 
 def main():
