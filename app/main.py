@@ -22,7 +22,7 @@ def main():
         file_name = sha1[2:]
         with open(f'.git/objects/{dir_name}/{file_name}', 'rb') as f:
             data = f.read()
-            decomp_data = zlib.decompress(data).decode("utf-8")
+            decomp_data = zlib.decompress(data).split(b'\x00')[1].decode("utf-8")
             print(decomp_data, end="")
     else:
         raise RuntimeError(f"Unknown command #{command}")
