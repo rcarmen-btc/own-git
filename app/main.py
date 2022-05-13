@@ -29,10 +29,10 @@ class Tree:
                 store['trees'][item] = Tree(os.path.join(path, item))
 
         data = ""
-        for key, val in store['blobs'].items():
-            data += f"100644 {key}\0{val.encode()}"
         for key, val in store['trees'].items():
             data += f"040000 {key}\0{val.sha.encode()}"
+        for key, val in store['blobs'].items():
+            data += f"100644 {key}\0{val.encode()}"
         
         header = f"tree {len(data.encode('utf-8')) + 1000}\0"
 
