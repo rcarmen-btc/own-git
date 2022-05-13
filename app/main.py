@@ -16,7 +16,7 @@ def main():
         with open(".git/HEAD", "w") as f:
             f.write("ref: refs/heads/master\n")
         print("Initialized git directory")
-    if command == "cat-file" and sys.argv[2] == "-p":
+    elif command == "cat-file" and sys.argv[2] == "-p":
         sha1 = sys.argv[3]
         dir_name = sha1[:2]
         file_name = sha1[2:]
