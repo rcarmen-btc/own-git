@@ -44,7 +44,6 @@ def main():
             dir_name = sha1[:2]
             file_name = sha1[2:]
             path_to_dir = f'.git/objects/{dir_name}/'
-
             try:
                 os.mkdir(path_to_dir)
                 zlib_content = zlib.compress(store.encode())
