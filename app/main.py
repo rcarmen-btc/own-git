@@ -1,5 +1,6 @@
 import sys
 import os
+import zlib
 
 
 def main():
@@ -16,6 +17,16 @@ def main():
         with open(".git/HEAD", "w") as f:
             f.write("ref: refs/heads/master\n")
         print("Initialized git directory")
+    if command == "cat-file" and sys.argv[2] == "-p":
+        sha1 = sys.argv[3]
+        dir_name = sha1[:2]
+        file_name = sha1[2:]
+        with open(f'.git/objects/{dir_name}/{file_name}', 'rb') as f:
+            data = f.read()
+            decomp_data = zlib.decompress(data).decode("utf-8")
+            print(decomp_data, end="")
+
+
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
