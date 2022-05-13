@@ -5,10 +5,9 @@ import zlib
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
+    # print("Logs from your program will appear here!")
 
     # Uncomment this block to pass the first stage
-    #
     command = sys.argv[1]
     if command == "init":
         os.mkdir(".git")
@@ -25,8 +24,6 @@ def main():
             data = f.read()
             decomp_data = zlib.decompress(data).decode("utf-8")
             print(decomp_data, end="")
-
-
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
