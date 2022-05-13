@@ -1,9 +1,84 @@
 from ftplib import error_perm
+from pkgutil import iter_modules
 import sys
 import os
 import zlib
 import hashlib
 
+class Tree:
+    
+    def __init__(self, path) -> None:
+        arr = os.listdir(path)
+        if '.git' in arr:
+            arr.remove('.git')
+        if '__pycache__' in arr:
+            arr.remove('__pycache__')
+        store = {
+            'blobs': {
+                
+            },
+            'trees': {
+                
+            }
+        }
+        for item in arr:
+            isFile = os.path.isfile(os.path.join(path, item))
+            if isFile:
+                store['blobs'][item] = hash_object(os.path.join(path, item))
+            else:
+                store['trees'][item] = Tree(os.path.join(path, item))
+
+        data = ""
+        for key, val in store['blobs'].items():
+            data += f"100644 {key}\0{val}"
+        for key, val in store['trees'].items():
+            data += f"040000 {key}\0{val.sha}"
+        
+        header = f"tree {len(data.encode('utf-8'))}\0"
+
+        store = header + data
+
+        sha1 = hashlib.sha1(store.encode()).hexdigest()
+
+        self.sha = sha1
+
+        dir_name = sha1[:2]
+        file_name = sha1[2:]
+        path_to_dir = f'.git/objects/{dir_name}/'
+        try:
+            os.mkdir(path_to_dir)
+        except FileExistsError:
+            pass
+        zlib_content = zlib.compress(store.encode())
+        with open(path_to_dir + file_name, 'wb') as f:
+            f.write(zlib_content)
+    
+    def __str__(self):
+        return self.sha
+
+
+def hash_object(file_name: str):
+    with open(file_name, 'r') as f:
+        data = f.read()
+    header = f"blob {len(data.encode('utf-8'))}\0"
+    store = header + data
+
+    sha1 = hashlib.sha1(store.encode()).hexdigest()
+
+    dir_name = sha1[:2]
+    file_name = sha1[2:]
+    path_to_dir = f'.git/objects/{dir_name}/'
+    try:
+        os.mkdir(path_to_dir)
+    except FileExistsError:
+        pass
+    zlib_content = zlib.compress(store.encode())
+    try:
+        with open(path_to_dir + file_name, 'wb') as f:
+            f.write(zlib_content)
+    except PermissionError:
+        pass
+    return sha1
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -31,24 +106,7 @@ def main():
     elif command == "hash-object":
         if sys.argv[2] == "-w":
             file_name = sys.argv[3]
-            with open(file_name, 'r') as f:
-                data = f.read()
-            header = f"blob {len(data.encode('utf-8'))}\0"
-            store = header + data
-
-            sha1 = hashlib.sha1(store.encode()).hexdigest()
-            print(sha1)
-
-            dir_name = sha1[:2]
-            file_name = sha1[2:]
-            path_to_dir = f'.git/objects/{dir_name}/'
-            try:
-                os.mkdir(path_to_dir)
-                zlib_content = zlib.compress(store.encode())
-                with open(path_to_dir + file_name, 'wb') as f:
-                    f.write(zlib_content)
-            except FileExistsError:
-                pass
+            print(hash_object(file_name))
     elif command == "ls-tree":
         if sys.argv[2] == "--name-only":
             tree_sha1 = sys.argv[3]
@@ -59,8 +117,9 @@ def main():
                 for i in range(2, len(zlib.decompress(data).split(b' '))):
                     decomp_data = zlib.decompress(data).split(b' ')[i].split(b'\0')[0].decode()
                     print(decomp_data)
-
-
+    elif command == "write-tree":
+        tree = Tree('.')
+        print(tree)
     else:
         raise RuntimeError(f"Unknown command #{command}")
 
