@@ -1,7 +1,7 @@
-from ftplib import error_perm
-from pkgutil import iter_modules
 import sys
 import os
+import re
+from turtle import st
 import zlib
 import hashlib
 
@@ -15,32 +15,29 @@ class Tree:
             arr.remove('__pycache__')
         store = {
             'blobs': {
-                
             },
             'trees': {
-                
             }
         }
         for item in arr:
             isFile = os.path.isfile(os.path.join(path, item))
             if isFile:
-                store['blobs'][item] = hash_object(os.path.join(path, item))
+                mode = oct(os.stat(os.path.join(path, item)).st_mode)[2:]
+                store['blobs'][item] = [hash_object(os.path.join(path, item)), mode]
             else:
-                store['trees'][item] = Tree(os.path.join(path, item))
-
-        data = ""
-        for key, val in store['trees'].items():
-            data += f"040000 {key}\0{val.sha.encode()}"
+                mode = oct(os.stat(os.path.join(path, item)).st_mode)[2:]
+                store['trees'][item] = [Tree(os.path.join(path, item)), mode]
+        data = "" # data is tree object content
         for key, val in store['blobs'].items():
-            data += f"100644 {key}\0{val.encode()}"
-        
-        header = f"tree {len(data.encode('utf-8')) + 1000}\0"
+            data += f"{val[1]} {key}\0{val[0]}" # key is name of file, val is SHA1 of blob
+        for key, val in store['trees'].items():
+            data += f"{val[1]} {key}\0{val[0].sha}" # key is name of tree inside dir, val is SHA1 of tree inside dir  
 
+        header = f"tree {len(data.encode('utf-8'))}\0" # add "tree" and content size
         store = header + data
+        sha1 = hashlib.sha1(store.encode()).hexdigest() # sha1 of tree object
 
-        sha1 = hashlib.sha1(store.encode()).hexdigest()
-
-        self.sha = sha1
+        self.sha = sha1 
 
         dir_name = sha1[:2]
         file_name = sha1[2:]
@@ -50,6 +47,9 @@ class Tree:
         except FileExistsError:
             pass
         zlib_content = zlib.compress(store.encode())
+        # print(store)
+        # print(store.encode())
+        # print(zlib_content)
         with open(path_to_dir + file_name, 'wb') as f:
             f.write(zlib_content)
     
@@ -108,6 +108,7 @@ def main():
             file_name = sys.argv[3]
             print(hash_object(file_name))
     elif command == "ls-tree":
+        # entries = [ line[0:2]+(line[2].encode('hex'),) for line in re.findall('(\d+) (.*?)\0(.{20})', body, re.MULTILINE) ]
         if sys.argv[2] == "--name-only":
             tree_sha1 = sys.argv[3]
             dir_name = tree_sha1[:2]
