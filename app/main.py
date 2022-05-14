@@ -1,7 +1,6 @@
 import sys
 import os
 import re
-from turtle import st
 import zlib
 import hashlib
 
